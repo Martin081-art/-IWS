@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 
 // Set test user details (you can adjust these)
 const testUser = {
-  userId: 6,
-  username: 'sales3',
-  role: 'sales' // Must match the role used in your auth middleware
+  userId: 12,
+  username: 'admin',
+  role: 'admin ' // Must match the role used in your auth middleware
 };
 
 // Generate token

@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from 'react';
+
+const IncomeForm = ({ editingId, incomeStatements, setIncomeStatements, fetchIncomeStatements }) => {
+  const [month, setMonth] = useState('');
+  const [income, setIncome] = useState('');
+  const [expenses, setExpenses] = useState('');
+  const [profit, setProfit] = useState('');
+  
+  useEffect(() => {
+    if (income && expenses) {
+      setProfit(parseFloat(income) - parseFloat(expenses));
+    }
+  }, [income, expenses]);
+
+  useEffect(() => {
+    if (editingId !== null) {
+      const statement = incomeStatements.find(statement => statement.id === editingId);
+      if (statement) {
+        setMonth(statement.month);
+        setIncome(statement.income);
+        setExpenses(statement.expenses);
+        setProfit(statement.profit);
+      }
+    }
+  }, [editingId, incomeStatements]);
+
+  const resetForm = () => {
+    setMonth('');
+    setIncome('');
+    setExpenses('');
+    setProfit('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (editingId !== null) {
+      // Update existing statement
+      try {
+        const response = await fetch(`http://localhost:5000/api/income/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ month, income, expenses, profit })
+        });
+        const result = await response.json();
+        if (result.message === 'Income Statement Updated') {
+          alert('Income statement updated!');
+          fetchIncomeStatements();
+          resetForm();
+        }
+      } catch (err) {
+        console.error('Update error:', err);
+        alert('Error updating statement');
+      }
+    } else {
+      // Create new statement
+      try {
+        const response = await fetch('http://localhost:5000/api/income', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ month, income, expenses, profit }),
+        });
+
+        const data = await response.json();
+        if (data.message === 'Income Statement Created') {
+          alert('Income statement created successfully!');
+          fetchIncomeStatements();
+          resetForm();
+        } else {
+          alert('Failed to create income statement');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error submitting income statement');
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow-md rounded-lg p-6">
+      <div>
+        <label htmlFor="month" className="block text-sm font-semibold text-gray-700">Month</label>
+        <input
+          type="text"
+          id="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="w-full p-3 mt-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="income" className="block text-sm font-semibold text-gray-700">Income</label>
+        <input
+          type="number"
+          id="income"
+          value={income}
+          onChange={(e) => setIncome(e.target.value)}
+          className="w-full p-3 mt-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="expenses" className="block text-sm font-semibold text-gray-700">Expenses</label>
+        <input
+          type="number"
+          id="expenses"
+          value={expenses}
+          onChange={(e) => setExpenses(e.target.value)}
+          className="w-full p-3 mt-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="profit" className="block text-sm font-semibold text-gray-700">Profit</label>
+        <input
+          type="number"
+          id="profit"
+          value={profit}
+          disabled
+          className="w-full p-3 mt-2 border rounded-md bg-gray-100 border-gray-300"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 text-white py-3 rounded-md mt-4 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        {editingId ? 'Update Income Statement' : 'Submit Income Statement'}
+      </button>
+    </form>
+  );
+};
+
+export default IncomeForm;

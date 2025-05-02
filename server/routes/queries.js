@@ -1,40 +1,33 @@
 const express = require('express');
-const { Query } = require('../models');  // Correctly import the Query model
-const { Op } = require('sequelize');
-
-
+const { Query } = require('../models'); // Correct import for Query model
+const { replyToQuery, markQueryComplete, getAllQueries } = require('../controllers/queriescontroller'); // Correct import for controller functions
+const { getSimilarityScore } = require('../services/similarityService'); // Correct import for similarity service
+const { Op } = require('sequelize'); // Correct import for Sequelize operators
 const router = express.Router();
 
-
-
-
-// Validate required fields
-const validateFields = (fields, reqBody) => {
-  return fields.every(field => reqBody[field] && reqBody[field].trim() !== '');
-};
-
-const findAutoReply = (incomingMessage, previousQueries) => {
-  incomingMessage = incomingMessage.toLowerCase();
-
+// Function to find the best auto-reply based on message similarity
+const findAutoReply = (message, previousQueries) => {
+  let bestMatch = null;
+  let highestScore = 0;
+  
+  // Loop through previous queries and find the best match based on similarity score
   for (const query of previousQueries) {
-    const storedMessage = query.message.toLowerCase();
-    if (
-      incomingMessage.includes(storedMessage) ||
-      storedMessage.includes(incomingMessage)
-    ) {
-      return query.reply_message;
+    const score = getSimilarityScore(message, query.message); // Compute similarity score
+    if (score > highestScore && score >= 0.4) { // Match if score exceeds threshold
+      highestScore = score;
+      bestMatch = query;
     }
   }
-
-  return null;
+  
+  return bestMatch ? bestMatch.reply_message : null; // Return reply message if match is found
 };
 
-
-
+// Route to create a new query
 router.post('/', async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
+    // Get all previous queries with completed status and replies
     const previousQueries = await Query.findAll({
       where: {
         status: 'complete',
@@ -45,15 +38,17 @@ router.post('/', async (req, res) => {
       }
     });
 
+    // Find an auto-reply for the current message
     const autoReply = findAutoReply(message, previousQueries);
 
+    // Create a new query in the database
     const newQuery = await Query.create({
       name,
       email,
       message,
-      status: autoReply ? 'complete' : 'pending',
-      auto_replied: autoReply ? 1 : 0,
-      reply_message: autoReply || null,
+      status: autoReply ? 'complete' : 'pending', // Set status to complete if there's an auto-reply
+      auto_replied: autoReply ? 1 : 0, // Set auto_replied flag
+      reply_message: autoReply || null, // Set the reply message
     });
 
     res.status(201).json({
@@ -66,19 +61,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/report', async (req, res) => {
-  try {
-    const allQueries = await Query.findAll({
-      order: [['createdAt', 'DESC']],
-    });
-    res.status(200).json(allQueries);
-  } catch (error) {
-    console.error('Error fetching query report:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+// Route to reply to a query
+router.put('/reply/:query_id', replyToQuery); // Use query_id in the route
 
+// Route to mark a query as complete
+router.put('/:query_id', markQueryComplete); // Matches frontend expectations
 
-
+// Route to get all queries
+router.get('/', getAllQueries); // Replaced with direct controller function
 
 module.exports = router;

@@ -1,0 +1,46 @@
+import React from 'react';
+
+const IncomeList = ({ incomeStatements, handleEdit, handleDelete }) => {
+  return (
+    <div className="mt-8 bg-white shadow-md rounded-lg p-6">
+      <h3 className="text-xl font-semibold mb-4 text-center">All Income Statements</h3>
+      <table className="w-full table-auto border-collapse">
+        <thead>
+          <tr className="bg-blue-100">
+            <th className="p-4 text-left text-sm font-semibold text-gray-600">Month</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-600">Income</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-600">Expenses</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-600">Profit</th>
+            <th className="p-4 text-left text-sm font-semibold text-gray-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {incomeStatements.map((statement) => (
+            <tr key={statement.id} className="hover:bg-gray-100">
+              <td className="p-4 text-sm text-gray-700">{statement.month}</td>
+              <td className="p-4 text-sm text-gray-700">{statement.income}</td>
+              <td className="p-4 text-sm text-gray-700">{statement.expenses}</td>
+              <td className="p-4 text-sm text-gray-700">{statement.profit}</td>
+              <td className="p-4 text-sm">
+                <button
+                  onClick={() => handleEdit(statement)}
+                  className="text-blue-500 hover:text-blue-700 mr-4"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(statement.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default IncomeList;
