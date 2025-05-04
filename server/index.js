@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-
+const path = require('path');
+const bcrypt = require('bcryptjs'); // Use bcryptjs instead of bcrypt
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -28,16 +29,22 @@ const salesRoute = require('./routes/sales'); // Import the new sales route
 const analyticsRoutes = require('./routes/analytics');
 const authRoutes = require('./routes/auth');
 
-
-// Route usage
+// Define your routes here
 app.use('/api/products', productsRoute);
 app.use('/api/income', incomeRoute);
 app.use('/api/queries', queriesRoute);
 app.use('/api/users', usersRoute);
-app.use('/api/sales', salesRoute); // Add sales route to handle sales-related API requests
+app.use('/api/sales', salesRoute);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/auth', authRoutes);
 
+// Optional: Serve static files (if any) for production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} 🚀`);

@@ -27,6 +27,8 @@ router.post('/', async (req, res) => {
   const { name, email, message } = req.body;
 
   try {
+    console.log('Received request to create a new query:', req.body);
+
     // Get all previous queries with completed status and replies
     const previousQueries = await Query.findAll({
       where: {
@@ -38,8 +40,11 @@ router.post('/', async (req, res) => {
       }
     });
 
+    console.log('Found previous queries with auto-replies:', previousQueries);
+
     // Find an auto-reply for the current message
     const autoReply = findAutoReply(message, previousQueries);
+    console.log('Auto-reply found:', autoReply);
 
     // Create a new query in the database
     const newQuery = await Query.create({
@@ -50,6 +55,8 @@ router.post('/', async (req, res) => {
       auto_replied: autoReply ? 1 : 0, // Set auto_replied flag
       reply_message: autoReply || null, // Set the reply message
     });
+
+    console.log('New query created:', newQuery);
 
     res.status(201).json({
       message: 'Query logged successfully',
@@ -62,12 +69,21 @@ router.post('/', async (req, res) => {
 });
 
 // Route to reply to a query
-router.put('/reply/:query_id', replyToQuery); // Use query_id in the route
+router.put('/reply/:query_id', (req, res, next) => {
+  console.log('Received request to reply to query with ID:', req.params.query_id);
+  next();
+}, replyToQuery); // Use query_id in the route
 
 // Route to mark a query as complete
-router.put('/:query_id', markQueryComplete); // Matches frontend expectations
+router.put('/:query_id', (req, res, next) => {
+  console.log('Received request to mark query with ID:', req.params.query_id, 'as complete');
+  next();
+}, markQueryComplete); // Matches frontend expectations
 
 // Route to get all queries
-router.get('/', getAllQueries); // Replaced with direct controller function
+router.get('/', (req, res, next) => {
+  console.log('Received request to get all queries');
+  next();
+}, getAllQueries); // Replaced with direct controller function
 
 module.exports = router;
