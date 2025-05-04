@@ -3,7 +3,6 @@ const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const Pattern = require('url-pattern'); // Import url-pattern
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -36,27 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Handle dynamic routes using url-pattern for better flexibility
-const productPattern = new Pattern('/api/products/:id');
-const incomePattern = new Pattern('/api/income/*');
-
-app.use('/api/products', (req, res, next) => {
-  const match = productPattern.match(req.url);
-  if (match) {
-    console.log('Matched Product Route:', match);
-  }
-  next();
-});
-
-app.use('/api/income', (req, res, next) => {
-  const match = incomePattern.match(req.url);
-  if (match) {
-    console.log('Matched Income Route:', match);
-  }
-  next();
-});
-
-// Define your routes here
+// Skip dynamic matching and directly define routes
 app.use('/api/products', productsRoute);
 app.use('/api/income', incomeRoute);
 app.use('/api/queries', queriesRoute);
