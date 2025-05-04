@@ -18,7 +18,8 @@
     "mysql2": "^3.14.0",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "url-pattern": "^1.0.3"
   },
   "description": ""
 }
